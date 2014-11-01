@@ -1,5 +1,4 @@
 float zeroDegrees = radians(-90);
-
 int[] graph1 = {20, 50, 140, 32, 63, 190, 130, 82, 140, 160};
     
 void setup(){
@@ -77,12 +76,13 @@ void drawGraph(){
   //draw the background
   noStroke();
   fill(230);
-  rect(0, 0, width-60, 200);
-  int x = 10;
-  for(int y = 0; y < graph1.length; y++){
-    drawLine(x, graph1[y], x+10, graph1[y]);
-    x+=10;
-  }  
+  rect(0, 0, 540, 200);
+  drawLine(0, 50, 100, 80);
+  drawLine(100, 80, 200, 80);
+  drawLine(200, 80, 300, 120);
+  drawLine(300, 120, 400, 36);
+  drawLine(400, 36, 500, 80);
+  drawLine(500, 80, 540, 50);
   popMatrix();
 }
 
