@@ -1,29 +1,48 @@
+import processing.serial.*;
+Serial myPort;  // Create object from Serial class
+String val;     // Data received from the serial port
+
 float zeroDegrees = radians(-90);
 int[] graph1 = {20, 50, 140, 32, 63, 190, 130, 82, 140, 160};
     
 void setup(){
   size(600, 900);
   smooth();
-  print(graph1.length);
+  String portName = Serial.list()[3]; //change the 0 to a 1 or 2 etc. to match your port
+  myPort = new Serial(this, portName, 9600);
 }
 
 
 //======Loop Functions =======
 void draw(){
+  if (myPort.available() > 0) 
+    {  // if data is available,
+    val = myPort.readStringUntil('\n');       // read it and store it in val
+    }
+  println(val);
+  
   //set the floats dynamically every loop
+  float rawCelsius = 32.3;
+  float rawHumidity = 80;
+  float rawCarbon = 3;
+  
+  //map the values to a circle
   float milliSeconds = map(second()/100, 0, 100, 0, 360);
   float seconds = map(second(), 0, 60, 0, 360);
   float minutes = map(minute(), 0, 60, 0, 360);
   float hours = map(hour()-12, 0, 12, 0, 360);
-//  float hours = 13;
+  float celsius = map(rawCelsius, 0, 45, 0, 360);
+  float humidity = map(rawHumidity, 0, 100, 0, 360);
+//  float light = map(rawLight, 0, 100, 0, 360);
+  float carbon = map(rawCarbon, 0, 20, 0, 360);
   
   //draw the results
   background(242);
   drawClock(seconds, minutes, hours);
-  drawArc(240, 260, red);
-  drawArc(300, 300, eggplant);
+  drawArc(240, celsius, red);
+  drawArc(300, humidity, eggplant);
   drawArc(360, 200, purple);
-  drawArc(420, 270, blue);
+  drawArc(420, carbon, blue);
   drawGraph();
 }
 
@@ -59,7 +78,7 @@ void drawClock(float seconds, float minutes, float hours){
     
     if(hour() < 1){fill(orange[0], orange[1], orange[2]);}
     else{fill(255);}
-    if(hour() > 12){text("0"+(hour()-12), width/2+3, height/3-85);}   //always display a 2 digit number
+    if(hour() > 12){text((hour()-12), width/2+3, height/3-85);}   //always display a 2 digit number
     else if(hour()-12 < 10 && hour()-12 != 0){ text("0"+hour(), width/2+3, height/3-85);}
     else{text(hour(), width/2+3, height/3-85);}
     
