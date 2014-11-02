@@ -1,6 +1,7 @@
-
 import processing.serial.*;
 Serial myPort;
+PFont font;
+
 
 int numValues = 4;    // number of input values or sensors
 // * change this to match how many values your Arduino is sending *
@@ -11,6 +12,7 @@ int[]   max      = new int[numValues];
 color[] valColor = new color[numValues];
 
 float partH;          // partial screen height
+float zeroDegrees = radians(-90);
 
 int xPos = 1;         // horizontal position of the graph
 
@@ -18,6 +20,8 @@ float temp = 0;
 float light = 0;
 float humidity = 0;
 float sound = 0;
+int  m = 0;
+int soundMinutes =0;
 
 void setup() {
   size(800, 600);
@@ -26,12 +30,13 @@ void setup() {
   // List all the available serial ports:
   printArray(Serial.list());
   // First port [0] in serial list is usually Arduino, but *check every time*:
-  myPort = new Serial(this, Serial.list()[3], 9600);
+  myPort = new Serial(this, Serial.list()[3], 38400);
   // don't generate a serialEvent() until you get a newline character:
   myPort.bufferUntil('\n');
   smooth();
   textSize(10);
   noStroke();
+
 
   // initialize:
   // *edit these* to match how many values you are reading, and what colors you like 
@@ -55,18 +60,45 @@ void setup() {
   min[3] = 0;
   max[3] = 100;  // custom range example 
   valColor[3] = color(255, 0, 255); // purple
+
+  font = loadFont("Metrophobic-24.vlw");
+  textFont(font, 12);
 }
 
 
 void draw() {
-  background(255);
-  // in this example, everything happens inside serialEvent()
-  // but you can also do stuff in every frame if you wish
-  showValues(50, 50);
-  drawArc(240, temp, red);
-  drawArc(300, humidity, eggplant);
-  drawArc(360, 200, purple);
-  drawArc(420, carbon, blue);
+  background(250);
+  showValues(50, 50); //this is the box with the raw data
+
+  if(sound > 20){
+    m++;
+    if(m >= 6000 ){
+      m=0;
+      soundMinutes++;
+    }
+  }
+  
+  if(hour() == 0 && minute() ==0){ //reset at midnight
+    m=0;
+    soundMinutes = 0;
+  }
+  
+  float thickness = map(sound, 20, 900, 33, 50);
+  drawClock(thickness);
+  drawArc(240, map(temp, 0, 50, 0, 360), red, thickness, temp+"°C");
+  drawArc(300, map(humidity, 0, 100, 0, 360), eggplant, thickness, humidity+"%");
+  drawArc(360, map(light, 0, 1023, 0, 360), purple, thickness, int(map(light, 0, 1023, 0, 100))+" Lumons");
+  drawArc(420, map(m, 0, 6000, 0, 360), blue, thickness, m/100+" sound seconds");
+  
+  //draw the tally of sound minutes for the day
+  textAlign(CENTER);
+  fill(0);
+  if(soundMinutes == 1){
+    text(soundMinutes+" Sound Minute Today", width/2, height -30);
+  }
+  else{
+  text(soundMinutes+" Sound Minutes Today", width/2, height -30);
+  }
 }
 
 
@@ -98,9 +130,11 @@ void serialEvent(Serial myPort) {
 void showValues(int xpos, int ypos) {
   pushMatrix();
   translate(xpos, ypos);
-  fill(250);
+  fill(240);
+  noStroke();
   rect(0, 0, 150, 90);
   fill(0);
+  textAlign(LEFT);
   text("Sound: "+sound, 10, 20);
   text("Light: "+light, 10, 40);
   text("Temp: "+temp+"°C", 10, 60);
@@ -113,11 +147,24 @@ void showValues(int xpos, int ypos) {
 }
 
 //helper function for drawing arcs
-void drawArc(int size, float end, int strokeColour[]) {
+void drawArc(int size, float end, int strokeColour[], float thickness, String value) {
   noFill();
-  strokeWeight(32);
+  strokeWeight(thickness);
   strokeCap(SQUARE);
   stroke(strokeColour[0], strokeColour[1], strokeColour[2]);
-  arc(width/2, height/3, size, size, zeroDegrees, radians(end - 90), OPEN);
+  arc(width/2, height/2, size, size, zeroDegrees, radians(end - 90), OPEN);
+  fill(255);
+  if (end < 5) {
+    fill(strokeColour[0], strokeColour[1], strokeColour[2]);
+  }
+  textAlign(LEFT);
+  text(value, width/2+5, (height/2-size/2)+(thickness/5));
+}
+
+//draw the clock
+void drawClock(float thickness) {
+  drawArc(60, map(hour()-12, 0, 12, 0, 360), green, thickness, hour()-12+"h");
+  drawArc(120, map(minute(), 0, 60, 0, 360), yellow, thickness, minute()+"m");
+  drawArc(180, map(second(), 0, 60, 0, 360), orange, thickness, second()+"s");
 }
 
