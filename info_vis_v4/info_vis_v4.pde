@@ -68,37 +68,37 @@ void setup() {
 
 void draw() {
   background(250);
-  showValues(50, 50); //this is the box with the raw data
+  //showValues(50, 50); //this is the box with the raw data
 
-  if(sound > 20){
-    m++;
-    if(m >= 6000 ){
+  if (sound > 30) {
+    m+=1.5;
+    if (m >= 6000 ) {
       m=0;
       soundMinutes++;
     }
   }
-  
-  if(hour() == 0 && minute() ==0){ //reset at midnight
+
+  if (hour() == 0 && minute() ==0) { //reset at midnight
     m=0;
     soundMinutes = 0;
   }
-  
-  float thickness = map(sound, 20, 900, 33, 50);
+
+  float thickness = map(sound, 30, 900, 33, 50);
   drawClock(thickness);
   drawArc(240, map(temp, 0, 50, 0, 360), red, thickness, temp+"°C");
   drawArc(300, map(humidity, 0, 100, 0, 360), eggplant, thickness, humidity+"%");
   drawArc(360, map(light, 0, 1023, 0, 360), purple, thickness, int(map(light, 0, 1023, 0, 100))+" Lumons");
   drawArc(420, map(m, 0, 6000, 0, 360), blue, thickness, m/100+" sound seconds");
-  
+
   //draw the tally of sound minutes for the day
   textAlign(CENTER);
   fill(0);
-  if(soundMinutes == 1){
+  if (soundMinutes == 1) {
     text(soundMinutes+" Sound Minute Today", width/2, height -30);
+  } else {
+    text(soundMinutes+" Sound Minutes Today", width/2, height -30);
   }
-  else{
-  text(soundMinutes+" Sound Minutes Today", width/2, height -30);
-  }
+  drawLabel(10, height-60);
 }
 
 
@@ -126,7 +126,7 @@ void serialEvent(Serial myPort) {
   }
 }
 
-//function to draw the value key
+//function to draw the value key - useful for debuging
 void showValues(int xpos, int ypos) {
   pushMatrix();
   translate(xpos, ypos);
@@ -149,22 +149,39 @@ void showValues(int xpos, int ypos) {
 //helper function for drawing arcs
 void drawArc(int size, float end, int strokeColour[], float thickness, String value) {
   noFill();
-  strokeWeight(thickness);
   strokeCap(SQUARE);
+  strokeWeight(thickness);
   stroke(strokeColour[0], strokeColour[1], strokeColour[2]);
   arc(width/2, height/2, size, size, zeroDegrees, radians(end - 90), OPEN);
   fill(255);
-  if (end < 5) {
+  if (end < 6) {
     fill(strokeColour[0], strokeColour[1], strokeColour[2]);
   }
   textAlign(LEFT);
   text(value, width/2+5, (height/2-size/2)+(thickness/5));
 }
 
-//draw the clock
+//draw the clock with hour logic
 void drawClock(float thickness) {
-  drawArc(60, map(hour()-12, 0, 12, 0, 360), green, thickness, hour()-12+"h");
+  if (hour() < 12) {
+    drawArc(60, map(hour(), 0, 12, 0, 360), green, thickness, hour()+"h");
+  } else {
+    drawArc(60, map(hour()-12, 0, 12, 0, 360), green, thickness, hour()-12+"h");
+  }
   drawArc(120, map(minute(), 0, 60, 0, 360), yellow, thickness, minute()+"m");
   drawArc(180, map(second(), 0, 60, 0, 360), orange, thickness, second()+"s");
+}
+
+void drawLabel(int xpos, int ypos) {
+  pushMatrix();
+  translate(xpos, ypos);
+  fill(250, 100);
+  noStroke();
+  rect(0, 0, 300, 200);
+  fill(0);
+  textAlign(LEFT);
+  text("UTS - Visualising Information", 20, 20);
+  text("RADAR", 20, 35);
+  popMatrix();
 }
 
